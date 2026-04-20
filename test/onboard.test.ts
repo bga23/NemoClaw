@@ -5402,7 +5402,7 @@ const { createSandbox } = require(${onboardPath});
     fs.writeFileSync(
       dockerfilePath,
       [
-        "ARG BASE_IMAGE=ghcr.io/nvidia/nemoclaw/sandbox-base:latest",
+        "ARG BASE_IMAGE=ghcr.io/bga23/nemoclaw/sandbox-base:latest",
         "ARG NEMOCLAW_MODEL=nvidia/nemotron-3-super-120b-a12b",
         "ARG NEMOCLAW_PROVIDER_KEY=nvidia",
         "ARG NEMOCLAW_PRIMARY_MODEL_REF=nvidia/nemotron-3-super-120b-a12b",
@@ -5444,7 +5444,7 @@ const { createSandbox } = require(${onboardPath});
     fs.writeFileSync(
       dockerfilePath,
       [
-        "ARG BASE_IMAGE=ghcr.io/nvidia/nemoclaw/sandbox-base:latest",
+        "ARG BASE_IMAGE=ghcr.io/bga23/nemoclaw/sandbox-base:latest",
         "ARG NEMOCLAW_MODEL=nvidia/nemotron-3-super-120b-a12b",
         "ARG NEMOCLAW_PROVIDER_KEY=nvidia",
         "ARG NEMOCLAW_PRIMARY_MODEL_REF=nvidia/nemotron-3-super-120b-a12b",
@@ -5532,7 +5532,7 @@ const { createSandbox } = require(${onboardPath});
     fs.writeFileSync(
       dockerfilePath,
       [
-        "ARG BASE_IMAGE=ghcr.io/nvidia/nemoclaw/sandbox-base:latest",
+        "ARG BASE_IMAGE=ghcr.io/bga23/nemoclaw/sandbox-base:latest",
         "ARG NEMOCLAW_MODEL=nvidia/nemotron-3-super-120b-a12b",
         "ARG NEMOCLAW_PROVIDER_KEY=nvidia",
         "ARG NEMOCLAW_PRIMARY_MODEL_REF=nvidia/nemotron-3-super-120b-a12b",
