@@ -523,7 +523,7 @@ function getBlueprintMaxOpenshellVersion(rootDir = ROOT) {
 // e2e tests in #1937 — the digest always comes from the same registry
 // we're pinning to. See #1904.
 
-const SANDBOX_BASE_IMAGE = "ghcr.io/nvidia/nemoclaw/sandbox-base";
+const SANDBOX_BASE_IMAGE = "ghcr.io/bga23/nemoclaw/sandbox-base";
 const SANDBOX_BASE_TAG = "latest";
 
 /**
