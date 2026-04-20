@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Build and push the fixed OpenShell cluster image to GHCR.
+# Triggered on pushes to main that touch the cluster-image/ directory,
+# or manually via workflow_dispatch.
+
+name: Build cluster image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cluster-image/**"
+  workflow_dispatch:
+    inputs:
+      base_tag:
+        description: "Upstream OpenShell cluster image tag to base on"
+        required: false
+        default: "0.0.26"
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/nemoclaw/cluster
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect base tag
+        id: tag
+        run: |
+          TAG="${{ github.event.inputs.base_tag || '0.0.26' }}"
+          echo "base_tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "image_tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: cluster-image
+          push: true
+          build-args: |
+            BASE_TAG=${{ steps.tag.outputs.base_tag }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.image_tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

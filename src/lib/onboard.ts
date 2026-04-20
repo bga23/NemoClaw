@@ -571,7 +571,8 @@ function pullAndResolveBaseImageDigest() {
 function getStableGatewayImageRef(versionOutput = null) {
   const version = getInstalledOpenshellVersion(versionOutput);
   if (!version) return null;
-  return `ghcr.io/nvidia/openshell/cluster:${version}`;
+  // Use fixed cluster image with self-contained TLS bootstrap
+  return `ghcr.io/bga23/nemoclaw/cluster:${version}`;
 }
 
 function getOpenshellBinary() {
@@ -2804,8 +2805,11 @@ async function startGatewayForRecovery(_gpu) {
 function getGatewayStartEnv() {
   const gatewayEnv = {};
   const openshellVersion = getInstalledOpenshellVersion();
+  // Use fixed cluster image with self-contained TLS bootstrap.
+  // The upstream image requires an external CLI bootstrap step that
+  // often hangs; this image embeds the bootstrap directly.
   const stableGatewayImage = openshellVersion
-    ? `ghcr.io/nvidia/openshell/cluster:${openshellVersion}`
+    ? `ghcr.io/bga23/nemoclaw/cluster:${openshellVersion}`
     : null;
   if (stableGatewayImage && openshellVersion) {
     gatewayEnv.OPENSHELL_CLUSTER_IMAGE = stableGatewayImage;
