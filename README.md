@@ -210,6 +210,46 @@ For security bulletins and PSIRT policies, visit the [NVIDIA Product Security](h
 
 This software automatically retrieves, accesses or interacts with external materials. Those retrieved materials are not distributed with this software and are governed solely by separate terms, conditions and licenses. You are solely responsible for finding, reviewing and complying with all applicable terms, conditions, and licenses, and for verifying the security, integrity and suitability of any retrieved materials for your specific use case. This software is provided "AS IS", without warranty of any kind. The author makes no representations or warranties regarding any retrieved materials, and assumes no liability for any losses, damages, liabilities or legal consequences from your use or inability to use this software or any retrieved materials. Use this software and the retrieved materials at your own risk.
 
+---
+
+## Fork Changes (bga23/NemoClaw)
+
+This fork fixes the **OpenShell gateway bootstrap failure** that prevents NemoClaw from completing onboarding. The upstream cluster image (`ghcr.io/nvidia/openshell/cluster`) relies on an external CLI step to create TLS/HMAC Kubernetes secrets after k3s starts. When this step hangs or times out, the gateway never becomes healthy and `nemoclaw onboard` fails indefinitely.
+
+### Root Cause
+
+The OpenShell StatefulSet requires four Kubernetes secrets to mount its TLS volumes:
+
+| Secret | Type | Key(s) | Purpose |
+|---|---|---|---|
+| `openshell-server-tls` | `kubernetes.io/tls` | `tls.crt`, `tls.key` | Server TLS certificate |
+| `openshell-server-client-ca` | `Opaque` | **`ca.crt`** | CA for client verification |
+| `openshell-client-tls` | `kubernetes.io/tls` | `tls.crt`, `tls.key` | Client mTLS certificate |
+| `openshell-ssh-handshake` | `Opaque` | `secret` | HMAC key for SSH handshake |
+
+Without these secrets the pod volumes cannot mount and the container never starts. The upstream `openshell gateway start` CLI is supposed to create them externally, but this often hangs on first run.
+
+**Additional bug:** The `openshell-server-client-ca` secret must use key `ca.crt` (created via `kubectl create secret generic --from-file=ca.crt=...`), **not** `tls.crt` (which `kubectl create secret tls` produces). The Helm chart mounts this at `/etc/openshell-tls/client-ca/` and the server reads `ca.crt` from that path.
+
+### What Changed
+
+1. **`cluster-image/`** — Custom Dockerfile extending the upstream cluster image with a background TLS bootstrap script that:
+   - Waits for the k3s API to become ready
+   - Generates a CA, server cert (with proper SANs), client cert, and HMAC secret
+   - Creates all four Kubernetes secrets idempotently
+   - Runs as a background process alongside k3s (no external CLI needed)
+
+2. **`.github/workflows/build-cluster-image.yml`** — GitHub Actions workflow to build and push the fixed image to `ghcr.io/bga23/nemoclaw/cluster`
+
+3. **`src/lib/onboard.ts`** — Patched `getStableGatewayImageRef()` and `getGatewayStartEnv()` to reference `ghcr.io/bga23/nemoclaw/cluster` instead of the upstream image
+
+### Philosophy
+
+- **No NemoClaw logic changed** — guardrails, security policies, and the OpenClaw integration remain identical
+- **Enterprise-safe** — TLS certificates are generated with 4096-bit RSA keys, proper SANs, and separate CA/server/client chains
+- **Idempotent** — bootstrap skips if secrets already exist, safe for container restarts
+- **Transparent** — the only difference is a self-contained cluster image that doesn't depend on external CLI timing
+
 ## License
 
 Apache 2.0. See [LICENSE](LICENSE).
