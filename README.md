@@ -14,6 +14,7 @@
 | 1 | **TLS bootstrap: wrong secret key** | `cluster-image/cluster-bootstrap.sh` | The `openshell-server-client-ca` secret was created with key `tls.crt` (TLS type), but OpenShell expects `ca.crt` (generic/Opaque type). Gateway health-check failed on fresh installs. Fixed by using `--from-file=ca.crt=...` with generic secret type. |
 | 2 | **Sandbox base image: hardcoded NVIDIA GHCR ref** | `src/lib/onboard.ts` | `SANDBOX_BASE_IMAGE` pointed to `ghcr.io/nvidia/nemoclaw/sandbox-base` which is a private registry. Onboarding step [6/8] failed with `docker pull` error. Repointed to `ghcr.io/bga23/nemoclaw/sandbox-base`. |
 | 3 | **Dockerfile.base: CRLF breaks version check** | `Dockerfile.base` | `grep \| awk \| tr -d '"'` didn't strip `\r` from YAML values. When building on Windows (CRLF line endings), `OPENCLAW_MIN_VERSION` contained a trailing CR, causing the `sort -V` comparison to always fail — even when versions matched. Fixed by adding `\r` to `tr -d`. |
+| 4 | **Cosmetic: ARG BASE_IMAGE default shows nvidia ref** | Dockerfile, 	est/onboard.test.ts | The ARG BASE_IMAGE default in Dockerfile showed ghcr.io/nvidia/... in build logs even though the correct ga23 image was passed via --build-arg. Updated default to ghcr.io/bga23/nemoclaw/sandbox-base:latest so logs reflect the actual image used. |
 
 ### Pre-built images
 
